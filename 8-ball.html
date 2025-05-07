@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic 8 Ball</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a237e, #673ab7);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+        
+        .ball-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto 30px;
+            overflow: visible;
+        }
+        
+        .ball {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 30px rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ball::before {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            width: 40%;
+            height: 40%;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 50%, transparent 70%);
+            border-radius: 50%;
+            transform: rotate(-45deg);
+            pointer-events: none;
+        }
+        
+        .ball::after {
+            content: '';
+            position: absolute;
+            top: 25%;
+            left: 25%;
+            width: 20%;
+            height: 20%;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.4) 30%, transparent 60%);
+            border-radius: 50%;
+            transform: rotate(-45deg);
+            pointer-events: none;
+        }
+        
+        .ball.shake {
+            animation: shake 1s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        
+        .ball.zoom {
+            opacity: 1;
+        }
+        
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0) rotate(2deg); }
+            20%, 80% { transform: translate3d(4px, 0, 0) rotate(-4deg); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0) rotate(6deg); }
+            40%, 60% { transform: translate3d(6px, 0, 0) rotate(-6deg); }
+        }
+        
+        .eight {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 80px;
+            font-weight: bold;
+            color: #000;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .eight.fade {
+            opacity: 0;
+        }
+        
+        .triangle {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 200px;
+            height: 180px;
+            background: #4a148c;
+            clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: transform 0.8s ease, opacity 0.5s ease;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+        }
+        
+        .triangle.visible {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .answer {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 160px;
+            color: white;
+            font-size: 14px;
+            line-height: 1.3;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            padding: 0 10px;
+        }
+        
+        .answer.visible {
+            opacity: 1;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            display: none;
+        }
+        
+        .loading.visible {
+            display: block;
+        }
+        
+        .loading:after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 60px;
+            margin: 8px;
+            border-radius: 50%;
+            border: 6px solid #fff;
+            border-color: #fff transparent #fff transparent;
+            animation: loading 1.2s linear infinite;
+        }
+        
+        @keyframes loading {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        button {
+            background: #ff3d7f;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin-top: 20px;
+            position: relative;
+            z-index: 5;
+        }
+        
+        button:hover {
+            background: #ff5e92;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.25);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        button.accept {
+            background: #4CAF50;
+        }
+        
+        button.accept:hover {
+            background: #66BB6A;
+        }
+        
+        @media (max-width: 480px) {
+            .ball-container {
+                width: 260px;
+                height: 260px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .eight {
+                font-size: 60px;
+            }
+            .triangle {
+                width: 160px;
+                height: 140px;
+            }
+            .answer {
+                width: 140px;
+                font-size: 13px;
+            }
+            .ball.zoom {
+                width: 130%;
+                height: 130%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Magic 8 Ball</h1>
+        <div class="ball-container">
+            <div class="ball">
+                <div class="eight">8</div>
+                <div class="triangle"></div>
+                <div class="answer"></div>
+                <div class="loading"></div>
+            </div>
+        </div>
+        <button id="shake-button">Shake the Ball</button>
+    </div>
+
+    <script>
+        // Store all possible answers
+        const answers = {
+            yes: [
+                "Yes, bitch.",
+                "Of course, you fucking idiot.",
+                "That's like asking if a bear shits in the woods.",
+                "Yes, but only if you want to be happy.",
+                "This is the most obvious yes I've ever seen.",
+                "Just do it, you coward."
+            ],
+            no: [
+                "No, bitch.",
+                "Absolutely not, you fucking psycho.",
+                "The fact that I have to tell you 'no' is a sign of how much you need to reevaluate your life choices.",
+                "Yes, but only if you're a fucking idiot.",
+                "The thought of you thinking that this was a possibility is embarrassing.",
+                "Save yourself some dignity on this one and let it go."
+                
+            ],
+            whatever: [
+                "Meh. At this point, who really cares?",
+                "I'm not even going to dignify that with an answer.",
+                "Shake me like you mean it, you pussy.",
+                "Sorry, I was on the other line with another bitch. Try again.",
+                "What am I, your fucking therapist?",
+                "Just flip a coin, you fucking loser.",
+            ]
+        };
+
+        // Get DOM elements
+        const shakeButton = document.getElementById('shake-button');
+        const ball = document.querySelector('.ball');
+        const triangle = document.querySelector('.triangle');
+        const answerText = document.querySelector('.answer');
+        const loading = document.querySelector('.loading');
+        const eight = document.querySelector('.eight');
+
+        // Flag to track state
+        let isShaking = false;
+        let hasAnswer = false;
+
+        // Add click event listener to the shake button
+        shakeButton.addEventListener('click', () => {
+            if (hasAnswer) {
+                // Reset everything
+                ball.classList.remove('zoom');
+                triangle.classList.remove('visible');
+                answerText.classList.remove('visible');
+                eight.classList.remove('fade');
+                shakeButton.textContent = "Shake the Ball";
+                shakeButton.classList.remove('accept');
+                hasAnswer = false;
+                isShaking = false;
+                return;
+            }
+            
+            // Prevent multiple shake actions
+            if (isShaking) return;
+            isShaking = true;
+            
+            // Reset the answer display
+            triangle.classList.remove('visible');
+            answerText.classList.remove('visible');
+            answerText.textContent = '';
+            
+            // Show the loading animation
+            loading.classList.add('visible');
+            
+            // Add the shake animation
+            ball.classList.add('shake');
+            
+            // Wait for shake animation to finish, then show "thinking" for a bit
+            setTimeout(() => {
+                ball.classList.remove('shake');
+                
+                // Get a random answer after a "thinking" delay
+                setTimeout(() => {
+                    // Hide loading animation
+                    loading.classList.remove('visible');
+                    
+                    // Fade out the 8
+                    eight.classList.add('fade');
+                    
+                    // Pick an answer category at random
+                    const categories = ['yes', 'no', 'whatever'];
+                    const category = categories[Math.floor(Math.random() * categories.length)];
+                    
+                    // Pick a random answer from the selected category
+                    const selectedAnswers = answers[category];
+                    const randomAnswer = selectedAnswers[Math.floor(Math.random() * selectedAnswers.length)];
+                    
+                    // Display the answer
+                    answerText.textContent = randomAnswer;
+                    
+                    // Delay showing the triangle and answer for a smoother animation
+                    setTimeout(() => {
+                        triangle.classList.add('visible');
+                        setTimeout(() => {
+                            answerText.classList.add('visible');
+                            
+                            // Change button text and style
+                            shakeButton.textContent = "Accept Answer";
+                            shakeButton.classList.add('accept');
+                            
+                            // Update state flags
+                            isShaking = false;
+                            hasAnswer = true;
+                        }, 300);
+                    }, 200);
+                }, 1500); // "Thinking" time
+            }, 1000); // Shake animation time
+        });
+    </script>
+</body>
+</html>
